@@ -1,42 +1,41 @@
-# 📄 PDF Ingestion & Text Utilities
+# PDF Ingestion & Text Utilities
 
 This section explains **`ingest_pdf.py`** and **`utils.py`**, the two foundational files responsible for transforming raw PDF documents into clean, structured, and RAG-ready data.
 
-These files work **before embeddings, vector databases, or LLMs** and form the backbone of the entire pipeline.
+These files operate **before embeddings, vector databases, or LLMs** and form the backbone of the entire pipeline.
 
 ---
 
-## 🧠 High-Level Overview
+## Overview
 
 | File | Purpose |
-|-----|--------|
-| 🗂️ **ingest_pdf.py** | Controls the **document ingestion pipeline** (PDF → chunks) |
-| 🛠️ **utils.py** | Provides **text processing utilities** (cleaning, splitting, chunking, prompting) |
+|------|--------|
+| **ingest_pdf.py** | Controls the document ingestion pipeline (PDF → chunks) |
+| **utils.py** | Provides reusable text processing utilities (cleaning, splitting, chunking, prompting) |
 
-👉 **Key idea:**  
-`ingest_pdf.py` orchestrates the workflow, while `utils.py` contains the reusable intelligence.
-
----
-
-## 📘 ingest_pdf.py — PDF Ingestion Pipeline
-
-### 🎯 What this file does
-
-`ingest_pdf.py` is responsible for converting a **raw PDF document** into **structured semantic chunks** that are ready for embedding and retrieval.
-
-It performs the following steps:
-
-1. 📥 Download the PDF (if not available locally)
-2. 📄 Read the PDF page-by-page
-3. 🧹 Clean extracted text
-4. ✂️ Split text into sentences
-5. 🧩 Group sentences into meaningful chunks
-6. 🚫 Remove tiny / noisy chunks
-7. 💾 Save final chunks to disk (`parquet`)
+**Key idea:**  
+`ingest_pdf.py` orchestrates the workflow, while `utils.py` contains the reusable logic.
 
 ---
 
-## 🔄 Pipeline Flow
+## ingest_pdf.py — PDF Ingestion Pipeline
+
+### What this file does
+
+`ingest_pdf.py` converts a raw PDF document into structured semantic chunks that are ready for embedding and retrieval.
+
+Pipeline steps:
+1. Download the PDF (if not available locally)
+2. Read the PDF page-by-page
+3. Clean extracted text
+4. Split text into sentences
+5. Group sentences into meaningful chunks
+6. Remove tiny or noisy chunks
+7. Save final chunks to disk (`parquet`)
+
+---
+
+## Pipeline Flow
 
 ```text
 PDF
@@ -54,101 +53,80 @@ chunks.parquet (RAG-ready)
 
 ---
 
-### 🧩 Key Functions
+### Key Functions
 
-#### `download_pdf()`
-- Downloads the PDF only if it doesn’t exist
-- Ensures reproducibility and automation
+**`download_pdf()`**  
+Downloads the PDF only if it doesn’t already exist, ensuring reproducibility.
 
-#### `open_and_read_pdf()`
-- Extracts text per page using PyMuPDF
-- Computes page-level statistics (tokens, words, sentences)
+**`open_and_read_pdf()`**  
+Extracts text per page using PyMuPDF and computes page-level statistics (tokens, words, sentences).
 
-#### `add_sentences_to_pages()`
-- Applies linguistic sentence segmentation
-- Adds sentence lists to each page
+**`add_sentences_to_pages()`**  
+Applies linguistic sentence segmentation and adds sentence lists to each page.
 
-#### `build_chunks_from_pages()`
-- Groups sentences into paragraph-like chunks
-- Preserves semantic meaning
+**`build_chunks_from_pages()`**  
+Groups sentences into paragraph-like chunks while preserving semantic meaning.
 
-#### `ingest_pdf()`
-- Orchestrates the full ingestion pipeline
-- Saves the final output to `chunks.parquet`
+**`ingest_pdf()`**  
+Orchestrates the full ingestion pipeline and saves the final output to `chunks.parquet`.
 
 ---
 
-### 📦 Output
+### Output
 
-The output is a **structured dataset** where each row represents a meaningful text chunk with metadata:
+The output is a structured dataset where each row represents a meaningful text chunk with metadata such as:
+- Page number  
+- Clean chunk text  
+- Token, word, and character statistics  
 
-- Page number
-- Clean chunk text
-- Token / word / character statistics
-
-This file **never talks to embeddings, Pinecone, or LLMs**.
-
----
-
-## 🛠️ utils.py — Text Processing & Prompt Utilities
-
-### 🎯 What this file does
-
-`utils.py` contains all **reusable helper functions** related to text processing and prompt construction.
-
-It focuses on:
-- Cleaning text
-- Linguistic sentence splitting
-- Semantic chunk creation
-- Noise filtering
-- RAG prompt formatting
+This file does **not** interact with embeddings, vector databases, or LLMs.
 
 ---
 
-### 🧠 Key Functions Explained
+## utils.py — Text Processing & Prompt Utilities
 
-#### 🧹 `text_formatter()`
-- Cleans raw PDF text
-- Removes line breaks and spacing artifacts
+### What this file does
 
-#### ✂️ `split_sentences_spacy()`
-- Uses spaCy’s sentencizer
-- Produces clean sentence-level splits
-- More reliable than regex-based splitting
-
-#### 🧩 `create_sentence_chunks()`
-- Groups sentences into fixed-size semantic chunks
-- Preserves meaning and structure
-- Computes chunk-level statistics
-
-#### 🚫 `filter_chunks()`
-- Removes very small or irrelevant chunks
-- Eliminates headers, footers, and noise
-
-#### 🧠 `prompt_formatter()`
-- Builds a **structured RAG prompt**
-- Injects retrieved context
-- Enforces grounded, detailed answers
-- Prevents hallucinations
+`utils.py` contains all reusable helper functions related to text processing and prompt construction.  
+It focuses on preparing clean, well-structured text and building grounded RAG prompts.
 
 ---
 
-## ⚖️ Difference Between ingest_pdf.py & utils.py
+### Key Functions Explained
+
+**`text_formatter()`**  
+Cleans raw PDF text by removing line breaks and spacing artifacts.
+
+**`split_sentences_spacy()`**  
+Uses spaCy’s sentencizer for reliable sentence-level splitting.
+
+**`create_sentence_chunks()`**  
+Groups sentences into fixed-size semantic chunks and computes chunk-level statistics.
+
+**`filter_chunks()`**  
+Removes very small or irrelevant chunks such as headers and footers.
+
+**`prompt_formatter()`**  
+Builds a structured RAG prompt by injecting retrieved context and enforcing grounded, detailed answers without hallucination.
+
+---
+
+## Difference Between ingest_pdf.py and utils.py
 
 | Aspect | ingest_pdf.py | utils.py |
-|-----|--------------|---------|
-| Role | Pipeline controller | Utility functions |
-| Responsibility | Orchestration | Text intelligence |
-| Handles files | ✅ Yes | ❌ No |
-| Reusable across projects | ❌ Mostly | ✅ Yes |
-| Knows about PDFs | ✅ Yes | ❌ No |
-| Knows about RAG prompting | ❌ No | ✅ Yes |
+|------|---------------|----------|
+| Role | Pipeline controller | Utility provider |
+| Responsibility | Orchestration | Text processing logic |
+| Handles files | Yes | No |
+| Reusable across projects | Limited | High |
+| PDF awareness | Yes | No |
+| RAG prompt logic | No | Yes |
 
 ---
 
-## 🔗 How They Work Together
+## How They Work Together
 
-```python
+```text
 ingest_pdf.py
  ├─ calls text_formatter()
  ├─ calls split_sentences_spacy()
@@ -156,5 +134,5 @@ ingest_pdf.py
  └─ calls filter_chunks()
 
 utils.py
- └─ provides all text-processing logic
-
+ └─ provides all reusable text-processing and prompt-formatting logic
+```
