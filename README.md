@@ -1,9 +1,6 @@
 # 🥗 Nutrition-RAG: PDF-Based Intelligent Nutrition Assistant
 
 <img width="2000" height="600" alt="image" src="https://github.com/user-attachments/assets/acd0df9c-23fd-466a-ae7e-60c17ca79d2c" />
-<img width="2000" height="600"
-     src="https://github.com/user-attachments/assets/741d7ee9-3fa6-4ae1-b027-fd86801f5f44" />
-
 
 An end-to-end **Retrieval-Augmented Generation (RAG)** project that allows you to chat with a nutrition textbook PDF using modern GenAI tools. This project is beginner-friendly and walks you through building a RAG system **from scratch**, exactly as it was developed step by step.
 
